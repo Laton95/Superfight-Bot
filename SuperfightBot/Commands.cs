@@ -6,55 +6,62 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.Addons.Interactive;
 using Discord.WebSocket;
+using System.Linq;
 
 namespace SuperfightBot
 {
     public class Commands : InteractiveBase
     {
+        private CommandService service;
+
+        public Commands(CommandService service)
+        {
+            this.service = service;
+        }
 
         [Command("random"), Summary("Draw a random full character."), Alias("r")]
         public async Task Random()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled **{1}** with attributes **{2}** and **{3}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawCharacter(), context.Deck.DrawAttribute(), context.Deck.DrawAttribute()));
+            await ReplyAsync(string.Format("{0} pulled **{1}** with attributes **{2}** and **{3}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawCharacter(), context.Deck.DrawAttribute(), context.Deck.DrawAttribute()));
         }
 
         [Command("attribute"), Summary("Draw a random attribute."), Alias("a")]
         public async Task Attribute()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled attribute **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawAttribute()));
+            await ReplyAsync(string.Format("{0} pulled attribute **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawAttribute()));
         }
 
         [Command("challenge"), Summary("Draw a random challenge."), Alias("chal")]
         public async Task Challenge()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled challenge **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawChallenge()));
+            await ReplyAsync(string.Format("{0} pulled challenge **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawChallenge()));
         }
 
         [Command("character"), Summary("Draw a random character."), Alias("char")]
         public async Task Character()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled character **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawCharacter()));
+            await ReplyAsync(string.Format("{0} pulled character **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawCharacter()));
         }
 
         [Command("location"), Summary("Draw a random location."), Alias("l")]
         public async Task Location()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled location **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawLocation()));
+            await ReplyAsync(string.Format("{0} pulled location **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawLocation()));
         }
 
         [Command("scenario"), Summary("Draw a random scenario."), Alias("sc")]
         public async Task Scenario()
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
-            await ReplyAsync(String.Format("{0} pulled scenario **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawScenario()));
+            await ReplyAsync(string.Format("{0} pulled scenario **{1}**", ((IGuildUser)Context.User).Nickname, context.Deck.DrawScenario()));
         }
 
-        [Command("reset"), Summary("Reshuffle the decks."), Alias("rs")]
+        [Command("reset"), Summary("Reshuffle the deck."), Alias("rs")]
         public async Task Reset()
         {
             await ReplyAsync("Reshuffling...");
@@ -119,7 +126,7 @@ namespace SuperfightBot
                 {
                     characters[i] = context.Deck.DrawCharacter();
                 }
-                characterField.WithValue(String.Format("1: {1} {0} 2: {2} {0} 3: {3}", Environment.NewLine, characters[0], characters[1], characters[2]));
+                characterField.WithValue(string.Format("1: {1} {0} 2: {2} {0} 3: {3}", Environment.NewLine, characters[0], characters[1], characters[2]));
 
                 embed.AddField(characterField);
 
@@ -131,7 +138,7 @@ namespace SuperfightBot
                 {
                     attributes[i] = context.Deck.DrawAttribute();
                 }
-                attributeField.WithValue(String.Format("1: {1} {0} 2: {2} {0} 3: {3}", Environment.NewLine, attributes[0], attributes[1], attributes[2]));
+                attributeField.WithValue(string.Format("1: {1} {0} 2: {2} {0} 3: {3}", Environment.NewLine, attributes[0], attributes[1], attributes[2]));
 
                 embed.AddField(attributeField);
 
@@ -156,7 +163,7 @@ namespace SuperfightBot
                     Card character = characters[int.Parse(inputs[0]) - 1];
                     Card attribute = attributes[int.Parse(inputs[1]) - 1];
 
-                    string message = String.Format("{0} played **{1}** with attribute **{2}** and random attribute **{3}**", ((IGuildUser)user).Nickname, character, attribute, randomAttribute);
+                    string message = string.Format("{0} played **{1}** with attribute **{2}** and random attribute **{3}**", ((IGuildUser)user).Nickname, character, attribute, randomAttribute);
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.WithDescription(message);
                     await channel.SendMessageAsync("", false, embed.Build());
@@ -171,7 +178,7 @@ namespace SuperfightBot
                 await dMChannel.SendMessageAsync("Round has timed out");
         }
 
-        [Command("decks"), Summary("Add, remove, clear or list players.")]
+        [Command("decks"), Summary("Add, remove, clear or list decks.")]
         public async Task Deck(string argument = null, params string[] deckNames)
         {
             GameContext context = GameContexts.getContext(Context.Guild.Id);
@@ -222,6 +229,36 @@ namespace SuperfightBot
 
                     break;
             }
+        }
+
+        [Command("help"), Summary("List avaliable commands.")]
+        public async Task Help()
+        {
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.Description = "These are the commands you can use";
+
+            foreach (ModuleInfo module in service.Modules)
+            {
+                string description = string.Empty;
+                foreach (CommandInfo command in module.Commands)
+                {
+                    PreconditionResult result = await command.CheckPreconditionsAsync(Context);
+                    if (result.IsSuccess)
+                        description += string.Format("!{0} (!{1}) - {2}" + Environment.NewLine, command.Aliases.First(), command.Aliases.Last(), command.Summary);
+                }
+
+                if (!string.IsNullOrWhiteSpace(description))
+                {
+                    embed.AddField(x =>
+                    {
+                        x.Name = module.Name;
+                        x.Value = description;
+                        x.IsInline = false;
+                    });
+                }
+            }
+
+            await ReplyAsync("", false, embed.Build());
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace SuperfightBot.Game
 {
@@ -75,7 +74,14 @@ namespace SuperfightBot.Game
             catch (ArgumentOutOfRangeException)
             {
                 Reset();
-                return Draw(list);
+                if (list.Count > 0)
+                {
+                    return Draw(list);
+                }
+                else
+                {
+                    throw new Exception("There are no cards in the deck");
+                }
             }
             
         }

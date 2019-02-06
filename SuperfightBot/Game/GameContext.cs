@@ -17,16 +17,18 @@ namespace SuperfightBot.Game
 
         public HashSet<Deck> UsedDecks { get; private set; }
 
+        private readonly string jsonPath;
+
         public GameContext(ulong id)
         {
             Id = id;
+            jsonPath = "guilds/" + Id + ".json";
             UsedDecks = new HashSet<Deck>();
             UsedDecks.Add(Decks.GetDeck("main"));
             Deck[] decks = UsedDecks.ToArray();
             Deck = new GameDeck(decks);
             Players = new HashSet<IUser>();
             ReadFromJson();
-
         }
 
         public void ResetDeck()
@@ -69,7 +71,7 @@ namespace SuperfightBot.Game
 
         public void SaveToJson()
         {
-            using (StreamWriter writer = new StreamWriter("guilds/" + Id + ".json"))
+            using (StreamWriter writer = new StreamWriter(jsonPath))
             {
                 GameContextJson gameJson = new GameContextJson();
                 gameJson.usedDecks = new string[UsedDecks.Count];
@@ -88,7 +90,7 @@ namespace SuperfightBot.Game
         {
             try
             {
-                using (StreamReader reader = new StreamReader("guilds/" + Id + ".json"))
+                using (StreamReader reader = new StreamReader(jsonPath))
                 {
                     string json = reader.ReadToEnd();
                     GameContextJson gameJson = JsonConvert.DeserializeObject<GameContextJson>(json);
@@ -97,9 +99,8 @@ namespace SuperfightBot.Game
             }
             catch (FileNotFoundException)
             {
-                
+                //No json found, game context is default
             }
-            
         }
 
         private class GameContextJson

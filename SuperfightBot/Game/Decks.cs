@@ -14,13 +14,21 @@ namespace SuperfightBot.Game
         {
             decks = new Dictionary<string, Deck>();
 
-            foreach (string deck in GetDecks())
+            foreach (string deck in GetDeckNames())
             {
                 AddDeck(deck);
             }
         }
 
-        public static IEnumerable<string> GetDecks()
+        public static void ReloadDecks()
+        {
+            foreach (Deck deck in decks.Values)
+            {
+                deck.Load();
+            }
+        }
+
+        public static IEnumerable<string> GetDeckNames()
         {
             List<string> output = new List<string>();
             string deckDirectory = Directory.GetCurrentDirectory() + "/decks";

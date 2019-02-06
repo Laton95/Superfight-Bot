@@ -242,9 +242,12 @@ namespace SuperfightBot
                 string description = string.Empty;
                 foreach (CommandInfo command in module.Commands)
                 {
-                    PreconditionResult result = await command.CheckPreconditionsAsync(Context);
-                    if (result.IsSuccess)
-                        description += string.Format("!{0} (!{1}) - {2}" + Environment.NewLine, command.Aliases.First(), command.Aliases.Last(), command.Summary);
+                    if (!command.Aliases.First().Equals("reload"))
+                    {
+                        PreconditionResult result = await command.CheckPreconditionsAsync(Context);
+                        if (result.IsSuccess)
+                            description += string.Format("!{0} (!{1}) - {2}" + Environment.NewLine, command.Aliases.First(), command.Aliases.Last(), command.Summary);
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(description))
@@ -259,6 +262,18 @@ namespace SuperfightBot
             }
 
             await ReplyAsync("", false, embed.Build());
+        }
+
+        [Command("reload"), Summary("Reload decks.")]
+        public async Task Reload()
+        {
+            Console.WriteLine(Context.User.Id);
+            if (Context.User.Id != 0)
+            {
+                Decks.ReloadDecks();
+                await ReplyAsync("Reloading decks from files.");
+            }
+            
         }
     }
 }

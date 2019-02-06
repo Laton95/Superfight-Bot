@@ -267,13 +267,8 @@ namespace SuperfightBot
         [Command("reload"), Summary("Reload decks.")]
         public async Task Reload()
         {
-            Console.WriteLine(Context.User.Id);
-            if (Context.User.Id != 0)
-            {
-                Decks.ReloadDecks();
-                await ReplyAsync("Reloading decks from files.");
-            }
-            
+            Decks.ReloadDecks();
+            await ReplyAsync("Reloading decks from files.");
         }
     }
 }
